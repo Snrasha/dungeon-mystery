@@ -142,6 +142,7 @@ namespace PMD
         public int floor_number ;
         public int fixed_room_id ;
         public int num_extra_hallways ;
+        public bool skip_entities;
         public int buried_item_density ;
         public int secondary_terrain_density ;
         public int itemless_monster_house_chance ;

@@ -1,13 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace PMD
 {
     public static class Visualisation
     {
 
+        public static void WriteFile(TileDungeon[][] dungeon_map, string filename)
+        {
+            string text = Visualisation.CreateMapString(dungeon_map);
 
+            string destination = Application.persistentDataPath + "/"+ filename + ".txt";
+
+            FileStream file;
+
+            //Debug.Log(destination);
+
+
+            if (File.Exists(destination))
+            {
+                File.Delete(destination);
+                file = File.Create(destination);
+            }
+            else file = File.Create(destination);
+
+
+            file.Write(System.Text.Encoding.Default.GetBytes(text));
+
+        }
         public static string CreateMapString(TileDungeon[][] map, List<int> list_x = null, List<int> list_y = null)
         {
             string map_string = "";

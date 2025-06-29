@@ -10,9 +10,9 @@ namespace PMD
 
 	public class DungeonGen
 	{
-		const int FLOOR_MAX_X = 56;
-		const int FLOOR_MAX_Y = 32;
-		const int DEFAULT_MAX_POSITION = 9999; //NA: 0233FF98
+		public const int FLOOR_MAX_X = 56;
+		public const int FLOOR_MAX_Y = 32;
+		public const int DEFAULT_MAX_POSITION = 9999; //NA: 0233FF98
 		TileDungeon DEFAULT_TILE = new TileDungeon();
 		//
 		//Globals
@@ -2190,7 +2190,6 @@ namespace PMD
 			if (dungeonRand.RandInt(100) >= monster_house_chance) return;
 			if (statusData.has_kecleon_shop) return;
 			if ((!IsOutlawMonsterHouseFloor() && IsDestinationFloorWithMonster()) || GetFloorType() != FloorType.FLOOR_TYPE_NORMAL) return;
-			Debug.Log("GenerateMonsterHouse");
 
 			int num_valid = 0;
 
@@ -4298,6 +4297,9 @@ namespace PMD
 			OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MAJOR, GenerationType.GEN_TYPE_GENERATE_SECONDARY_TERRAIN);
 		}
 
+
+
+
 		/**
          * NA: 02342C8C
          * SpawnStairs - Spawns stairs at a given location.
@@ -4307,7 +4309,7 @@ namespace PMD
          * If spawning normal stairs and the current floor is a rescue floor, the room
          * with the stairs will be converted into a Monster House.
          */
-		void SpawnStairs(int x, int y, HiddenStairsType hidden_stairs_type)
+		 void SpawnStairs(int x, int y, HiddenStairsType hidden_stairs_type)
 		{
 
 			dungeonData.list_tiles[x][y].spawn_or_visibility_flags.f_item = false;
@@ -4339,7 +4341,6 @@ namespace PMD
 			//If we're spawning normal stairs and this is a rescue floor, make the stairs room a Monster House
 			if (hidden_stairs_type == HiddenStairsType.HIDDEN_STAIRS_NONE && GetFloorType() == FloorType.FLOOR_TYPE_RESCUE)
 			{
-				Debug.Log("SpawnStairs");
 
 				int room_index = dungeonData.list_tiles[x][y].room_index;
 				for (int cur_x = 0; cur_x < FLOOR_MAX_X; cur_x++)
@@ -4401,6 +4402,22 @@ namespace PMD
          */
 		void SpawnNonEnemies(FloorProperties floor_props, bool is_empty_monster_house)
 		{
+            if (floor_props.skip_entities)
+            {
+				return;
+            }
+
+			SpawnStairs(floor_props, is_empty_monster_house);
+			SpawnNormalItems(floor_props, is_empty_monster_house);
+			SpawnBuriedItemsInWall(floor_props, is_empty_monster_house);
+
+			SpawnItemsTrapInMonsterHouse(floor_props, is_empty_monster_house);
+			SpawnNormalTraps(floor_props, is_empty_monster_house);
+			SpawnPlayer(floor_props, is_empty_monster_house);
+			OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MAJOR, GenerationType.GEN_TYPE_SPAWN_NON_ENEMIES);
+		}
+		public void SpawnStairs(FloorProperties floor_props, bool is_empty_monster_house)
+        {
 			List<int> valid_spawns_x = new List<int>();
 			List<int> valid_spawns_y = new List<int>();
 
@@ -4464,9 +4481,15 @@ namespace PMD
 				}
 			}
 
+
+		}
+
+
+		void SpawnNormalItems(FloorProperties floor_props, bool is_empty_monster_house)
+        {
 			//Spawn normal items
-			valid_spawns_x.Clear();
-			valid_spawns_y.Clear();
+			List<int> valid_spawns_x = new List<int>();
+			List<int> valid_spawns_y = new List<int>();
 
 			for (int x = 0; x < FLOOR_MAX_X; x++)
 			{
@@ -4539,9 +4562,14 @@ namespace PMD
 				}
 			}
 
+		}
+
+
+		void SpawnBuriedItemsInWall(FloorProperties floor_props, bool is_empty_monster_house)
+		{
 			//Spawn Buried Items (in walls)
-			valid_spawns_x.Clear();
-			valid_spawns_y.Clear();
+			List<int> valid_spawns_x = new List<int>();
+			List<int> valid_spawns_y = new List<int>();
 
 			for (int x = 0; x < FLOOR_MAX_X; x++)
 			{
@@ -4591,10 +4619,14 @@ namespace PMD
 					OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MINOR, GenerationType.GEN_TYPE_SPAWN_BURIED_ITEMS);
 				}
 			}
+		}
 
+
+		void SpawnItemsTrapInMonsterHouse(FloorProperties floor_props, bool is_empty_monster_house)
+        {
 			//Spawn items/traps in a non-empty Monster House
-			valid_spawns_x.Clear();
-			valid_spawns_y.Clear();
+			List<int> valid_spawns_x = new List<int>();
+			List<int> valid_spawns_y = new List<int>();
 
 			if (!is_empty_monster_house)
 			{
@@ -4660,10 +4692,13 @@ namespace PMD
 
 				OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MINOR, GenerationType.GEN_TYPE_SPAWN_MONSTER_HOUSE_ITEMS_TRAPS);
 			}
+		}
 
+		void SpawnNormalTraps(FloorProperties floor_props, bool is_empty_monster_house)
+        {
 			//Spawn Normal Traps
-			valid_spawns_x.Clear();
-			valid_spawns_y.Clear();
+			List<int> valid_spawns_x = new List<int>();
+			List<int> valid_spawns_y = new List<int>();
 
 			for (int x = 0; x < FLOOR_MAX_X; x++)
 			{
@@ -4727,7 +4762,10 @@ namespace PMD
 					OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MINOR, GenerationType.GEN_TYPE_SPAWN_TRAPS);
 				}
 			}
+		}
 
+		void SpawnPlayer(FloorProperties floor_props, bool is_empty_monster_house)
+		{
 			bool is_rescue_floor;
 
 			if (GetFloorType() == FloorType.FLOOR_TYPE_RESCUE)
@@ -4738,12 +4776,11 @@ namespace PMD
 			{
 				is_rescue_floor = false;
 			}
-
 			//Spawn the player
 			if (dungeonGenerationInfo.player_spawn_x == -1 || dungeonGenerationInfo.player_spawn_y == -1)
 			{
-				valid_spawns_x.Clear();
-				valid_spawns_y.Clear();
+				List<int> valid_spawns_x = new List<int>();
+				List<int> valid_spawns_y = new List<int>();
 
 				for (int x = 0; x < FLOOR_MAX_X; x++)
 				{
@@ -4789,15 +4826,20 @@ namespace PMD
 				}
 			}
 
-			OnCompleteGenerationStep(GenerationStepLevel.GEN_STEP_MAJOR, GenerationType.GEN_TYPE_SPAWN_NON_ENEMIES);
+			
 		}
 
-		/**
-         * NA: 02341470
-         * SpawnEnemies - Spawns all enemies, including those in forced monster houses
-         */
-		void SpawnEnemies(FloorProperties floor_props, bool is_empty_monster_house)
+			/**
+			 * NA: 02341470
+			 * SpawnEnemies - Spawns all enemies, including those in forced monster houses
+			 */
+			void SpawnEnemies(FloorProperties floor_props, bool is_empty_monster_house)
 		{
+			if (floor_props.skip_entities)
+			{
+				return;
+			}
+
 			List<int> valid_spawns_x = new List<int>();
 			List<int> valid_spawns_y = new List<int>();
 			int num_enemies;
@@ -5374,7 +5416,6 @@ namespace PMD
 						grid_size_x = dungeonRand.RandRange(2, max_x);
 						grid_size_y = dungeonRand.RandRange(2, max_y);
 
-					//	Debug.LogWarning(grid_size_x + " " + grid_size_y);
 
 						// Limit overall dimensions
 						if (grid_size_x <= 6 && grid_size_y <= 4) break;
@@ -5487,7 +5528,6 @@ namespace PMD
 									if (dungeonData.list_tiles[x][y].room_index < 0xf0)
 									{
 										room_tiles++;
-									//	Debug.Log(dungeonData.list_tiles[x][y].room_index);
 										if (dungeonData.list_tiles[x][y].room_index < 0x40)
 										{
 											room[dungeonData.list_tiles[x][y].room_index] = true;
@@ -5496,7 +5536,6 @@ namespace PMD
 								}
 							}
 						}
-						//Debug.Log("statusData.is_invalid " + statusData.is_invalid);
 
 						int num_rooms = 0;
 						for (int i = 0; i < room.Length; i++)
@@ -5505,9 +5544,6 @@ namespace PMD
 						}
 
 						if (num_rooms >= 2 && room_tiles >= 20) break; //This layout is good!
-																	   //Debug.Log(gen_attempts + " gen_attempts " + num_rooms + " " + room_tiles);
-																	   //Visualisation.WriteFile(dungeonData.list_tiles, "testgen" + gen_attempts);
-						//Visualisation.WriteFile(dungeonData.list_tiles, "testgen" + gen_attempts);
 					}
 
 					//This layout is bad! We need to try again
