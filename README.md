@@ -1,6 +1,6 @@
 # dungeon-mystery
 
-This fork is a Unity C# port of the [TypeScript](https://github.com/EpicYoshiMaster/dungeon-mystery).
+This fork is a Unity C# port of the [TypeScript Version](https://github.com/EpicYoshiMaster/dungeon-mystery).
 
 Read the original project for any documentation or informations.
 
